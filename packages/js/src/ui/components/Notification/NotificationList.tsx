@@ -1,4 +1,4 @@
-import { JSX, createMemo, createSignal, For, ParentComponent, Setter, Show, Suspense } from 'solid-js';
+import { createMemo, For, JSX, ParentComponent, Setter, Show } from 'solid-js';
 import type { NotificationFilter } from '../../../types';
 import { useNotificationsInfiniteScroll } from '../../api';
 import { useLocalization, useNewMessagesCount } from '../../context';
@@ -13,7 +13,13 @@ export const NotificationListContainer: ParentComponent<{ ref?: Setter<HTMLEleme
   const style = useStyle();
 
   return (
-    <div class={style('notificationList', 'nt-flex nt-flex-col nt-w-full nt-h-full nt-overflow-auto')} ref={props.ref}>
+    <div
+      class={style(
+        'notificationList',
+        'nt-relative nt-min-h-32 nt-flex nt-flex-col nt-w-full nt-h-full nt-overflow-auto'
+      )}
+      ref={props.ref}
+    >
       {props.children}
     </div>
   );
@@ -50,6 +56,7 @@ type NotificationListProps = {
 /* This is also going to be exported as a separate component. Keep it pure. */
 export const NotificationList = (props: NotificationListProps) => {
   const options = createMemo(() => ({ ...props.filter, limit: props.limit }));
+  const style = useStyle();
   const { data, setEl, end, refetch, initialLoading } = useNotificationsInfiniteScroll({ options });
   const { count, reset: resetNewMessagesCount } = useNewMessagesCount({ filter: { tags: props.filter?.tags ?? [] } });
 
@@ -60,10 +67,10 @@ export const NotificationList = (props: NotificationListProps) => {
   };
 
   return (
-    <>
+    <div class={style('notificationListContainer')}>
       <NewMessagesCta count={count()} onClick={handleOnNewMessagesClick} />
       <Show when={!initialLoading()} fallback={<NotificationListSkeleton count={8} />}>
-        <Show when={data().length > 0} fallback={<EmptyNotificationList />}>
+        <Show when={data().length <= 0} fallback={<EmptyNotificationList />}>
           <NotificationListContainer>
             <For each={data()}>
               {(notification) => (
@@ -84,6 +91,6 @@ export const NotificationList = (props: NotificationListProps) => {
           </NotificationListContainer>
         </Show>
       </Show>
-    </>
+    </div>
   );
 };
